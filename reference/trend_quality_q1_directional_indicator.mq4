@@ -91,6 +91,7 @@ int deinit() { return(0); }
 //
 //
 //
+// initialize work array
 
 double work[][7];
 #define _price  0
@@ -114,9 +115,11 @@ int start()
    double alpha1 = 2.0 / (1.0+FastLength);
    double alpha2 = 2.0 / (1.0+SlowLength);
 
+  // main for loop, caculate the trend quality value for each price bar
 
    for(i=limit, r=Bars-limit-1; i>=0; i--,r++)
    {
+    // macd calculation and directional component
       work[r][_price] = iMA(NULL,0,1,0,MODE_SMA,Price,i);
       work[r][_emaf]  = work[r-1][_emaf]+alpha1*(work[r][_price]-work[r-1][_emaf]);
       work[r][_emas]  = work[r-1][_emas]+alpha2*(work[r][_price]-work[r-1][_emas]);
@@ -125,8 +128,9 @@ int start()
                            if (macd>0) work[r][_sign] =  1;
                            if (macd<0) work[r][_sign] = -1;
                         trendQSign[i] = work[r][_sign];
-      
+        // get absolute value of the price change
          double change = MathAbs(work[r][_price]-work[r-1][_price]);
+         // if previous price sign is different from current price sign, reset the cpc and trend value
          if (work[r][_sign] != work[r-1][_sign])
             {
                work[r][_cpc]   = 0;
@@ -140,7 +144,7 @@ int start()
          work[r][_dt] = (work[r][_cpc]-work[r][_trend])*(work[r][_cpc]-work[r][_trend]);
          
 
-         
+         // avgDt, noise calculation
          double avgDt = 0; for (k=0; k<NoisePeriod; k++) avgDt += work[r-k][_dt]; avgDt /= NoisePeriod;
          double noise = CorrectionFactor*MathSqrt(avgDt);
            if (noise != 0)
